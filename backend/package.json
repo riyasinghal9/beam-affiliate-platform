@@ -1,0 +1,41 @@
+{
+  "name": "beam-affiliate-backend",
+  "version": "1.0.0",
+  "description": "Beam Wallet Affiliate Platform Backend",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "affiliate",
+    "beam-wallet",
+    "reseller",
+    "platform"
+  ],
+  "author": "Beam Team",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.3",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.1",
+    "stripe": "^12.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.5.0",
+    "@types/uuid": "^9.0.2",
+    "nodemon": "^3.0.1"
+  }
+}

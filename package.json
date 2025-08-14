@@ -1,0 +1,25 @@
+{
+  "name": "beam-affiliate-platform",
+  "version": "1.0.0",
+  "description": "Comprehensive Beam Wallet affiliate system",
+  "main": "index.js",
+  "scripts": {
+    "start": "./start-complete.sh",
+    "stop": "./stop.sh",
+    "dev": "./start-complete.sh",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "affiliate",
+    "beam-wallet",
+    "commission",
+    "payment",
+    "tracking"
+  ],
+  "author": "Beam Wallet Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beamwallet/affiliate-platform"
+  }
+} 
