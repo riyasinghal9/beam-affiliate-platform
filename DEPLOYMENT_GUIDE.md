@@ -80,7 +80,7 @@ JWT_SECRET=your-super-secure-jwt-secret-key-32-characters-minimum
 JWT_EXPIRY=24h
 
 # Payment Configuration
-STRIPE_SECRET_KEY=your_stripe_secret_key_hereyour_stripe_secret_key
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_keyyour_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 BEAM_WALLET_API_KEY=your_beam_wallet_api_key
 BEAM_WALLET_SECRET=your_beam_wallet_secret
@@ -119,7 +119,7 @@ LINKEDIN_API_KEY=your_linkedin_api_key
 ```bash
 REACT_APP_API_URL=https://api.your-domain.com
 REACT_APP_ENVIRONMENT=production
-REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_publishable_key_hereyour_stripe_public_key
+REACT_APP_STRIPE_PUBLIC_KEY=pk_test_your_stripe_publishable_keyyour_stripe_public_key
 REACT_APP_SENTRY_DSN=your_sentry_dsn
 ```
 

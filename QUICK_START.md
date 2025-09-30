@@ -36,7 +36,7 @@ JWT_SECRET=your-super-secure-32-character-secret-key-here
 ENCRYPTION_KEY=your-32-character-encryption-key-here
 
 # Payment (Get from Stripe Dashboard)
-STRIPE_SECRET_KEY=your_stripe_secret_key_hereyour_stripe_secret_key
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_keyyour_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
 # Email (Gmail recommended)

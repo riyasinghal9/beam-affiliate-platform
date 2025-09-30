@@ -469,7 +469,7 @@ Create a `.env` file in the backend directory:
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/beam-affiliate
 JWT_SECRET=your-super-secret-jwt-key
-STRIPE_SECRET_KEY=your_stripe_secret_key_here
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 BEAM_WALLET_API_KEY=your_beam_wallet_api_key
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-email-password
@@ -1057,9 +1057,9 @@ BEAM_WALLET_MIN_PAYOUT=50.00
 #### **Payment Processing Credentials**
 ```env
 # Stripe Configuration
-STRIPE_SECRET_KEY=your_stripe_secret_key_here
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret_here
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
 STRIPE_COMMISSION_RATE=0.05
 ```
 
