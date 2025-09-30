@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
-const { auth, adminAuth } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// Public routes (for customers)
+// Public routes (no authentication required)
+router.post('/process', paymentController.processPayment);
 router.post('/create-intent', paymentController.createPaymentIntent);
-router.post('/confirm', paymentController.confirmPayment);
+router.post('/test-stripe', paymentController.testStripe);
+router.get('/verify/:paymentId', paymentController.verifyPayment);
+router.post('/webhook', paymentController.handleWebhook);
 
-// Protected routes (for resellers)
-router.get('/reseller/:resellerId', auth, paymentController.getResellerPayments);
-
-// Admin routes
-router.get('/admin/all', adminAuth, paymentController.getAllPayments);
-router.get('/admin/stats', adminAuth, paymentController.getPaymentStats);
-router.put('/admin/:paymentId/approve', adminAuth, paymentController.adminApprovePayment);
+// Protected routes (require authentication)
+router.get('/history', auth, paymentController.getPaymentHistory);
+router.get('/stats', auth, paymentController.getPaymentStats);
+router.get('/wallet/balance', auth, paymentController.getWalletBalance);
+router.get('/wallet/transactions', auth, paymentController.getTransactionHistory);
 
 module.exports = router; 

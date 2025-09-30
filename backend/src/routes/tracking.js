@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const trackingService = require('../services/trackingService');
+const beamWalletService = require('../services/beamWalletService');
+const gamificationService = require('../services/gamificationService');
 const { auth } = require('../middleware/auth');
-const Click = require('../models/Click');
+const Product = require('../models/Product');
 const Sale = require('../models/Sale');
+const Click = require('../models/Click');
+const User = require('../models/User'); // Added missing import for User
 
-// Track click on affiliate link
+// POST endpoint for tracking clicks (used by frontend)
 router.post('/click', async (req, res) => {
   try {
     const {
@@ -16,40 +21,64 @@ router.post('/click', async (req, res) => {
       referrer,
       utmSource,
       utmMedium,
-      utmCampaign
+      utmCampaign,
+      timestamp
     } = req.body;
 
-    // Get real IP address
-    const realIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+    // Validate required fields
+    if (!resellerId || !productId || !linkUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required tracking data'
+      });
+    }
 
+    // Verify reseller exists
+    const reseller = await User.findOne({ resellerId, isActive: true });
+    if (!reseller) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reseller not found'
+      });
+    }
+
+    // Create click record
     const click = new Click({
-      resellerId,
-      productId,
-      linkUrl,
+      resellerId: reseller._id,
+      productId: productId, // Keep as string for now
+      source: 'referral',
+      ip: ipAddress || req.ip,
       userAgent: userAgent || req.headers['user-agent'],
-      ipAddress: ipAddress || realIp,
       referrer: referrer || req.headers.referer,
       utmSource,
       utmMedium,
       utmCampaign,
-      timestamp: new Date()
+      converted: false
     });
 
     await click.save();
 
-    res.json({ 
-      success: true, 
-      clickId: click._id,
-      message: 'Click tracked successfully' 
+    // Update reseller's total clicks
+    await User.findByIdAndUpdate(reseller._id, {
+      $inc: { totalClicks: 1 }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Click tracked successfully',
+      clickId: click._id
     });
   } catch (error) {
     console.error('Error tracking click:', error);
-    res.status(500).json({ success: false, message: 'Failed to track click' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to track click'
+    });
   }
 });
 
-// Track sale conversion
-router.post('/sale', auth, async (req, res) => {
+// POST endpoint for tracking sales (used by frontend)
+router.post('/sale', async (req, res) => {
   try {
     const {
       resellerId,
@@ -59,222 +88,542 @@ router.post('/sale', auth, async (req, res) => {
       amount,
       commission,
       clickId,
-      paymentMethod
+      paymentMethod,
+      timestamp
     } = req.body;
 
+    // Validate required fields
+    if (!resellerId || !productId || !customerEmail || !amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required sale data'
+      });
+    }
+
+    // Verify reseller exists
+    const reseller = await User.findOne({ resellerId, isActive: true });
+    if (!reseller) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reseller not found'
+      });
+    }
+
+    // Get product information
+    let product = null;
+    let productName = 'Unknown Product';
+    let commissionRate = 50;
+
+    try {
+      // Try to find product by ID (handle both ObjectId and string IDs)
+      if (productId.match(/^[0-9a-fA-F]{24}$/)) {
+        // Valid ObjectId format
+        product = await Product.findById(productId);
+      } else {
+        // String ID - try to find by productId field or use default
+        product = await Product.findOne({ productId: productId });
+      }
+      
+      if (product) {
+        productName = product.name;
+        commissionRate = product.commission || 50;
+      }
+    } catch (error) {
+      console.log('Product lookup failed, using defaults:', error.message);
+      // Use defaults if product lookup fails
+    }
+
+    // Calculate commission if not provided
+    const commissionAmount = commission || (amount * commissionRate / 100);
+
+    // Generate tracking ID
+    const trackingId = `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create sale record with all required fields
     const sale = new Sale({
-      resellerId,
-      productId,
-      customerEmail,
-      customerName,
-      amount,
-      commission,
-      clickId,
-      paymentMethod,
-      timestamp: new Date()
+      trackingId: trackingId,
+      resellerId: resellerId, // Use string resellerId
+      productId: productId.toString(), // Convert to string
+      productName: productName,
+      saleAmount: amount,
+      commissionAmount: commissionAmount,
+      commissionRate: commissionRate,
+      customerEmail: customerEmail,
+      customerName: customerName || 'Unknown Customer',
+      customerPhone: '', // Optional field
+      paymentMethod: paymentMethod || 'unknown',
+      paymentStatus: 'completed',
+      paymentId: `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      commissionStatus: 'pending',
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] || 'unknown',
+      timestamp: timestamp || new Date()
     });
 
     await sale.save();
 
-    res.json({ 
-      success: true, 
-      saleId: sale._id,
-      message: 'Sale tracked successfully' 
+    // Update reseller's total sales
+    await User.findByIdAndUpdate(reseller._id, {
+      $inc: { totalSales: 1, totalEarnings: commissionAmount }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Sale tracked successfully',
+      saleId: sale._id
     });
   } catch (error) {
     console.error('Error tracking sale:', error);
-    res.status(500).json({ success: false, message: 'Failed to track sale' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to track sale'
+    });
   }
 });
 
-// Get tracking statistics for reseller
-router.get('/stats/:resellerId', auth, async (req, res) => {
+// Track link click
+router.get('/click/:resellerId/:productId', async (req, res) => {
   try {
-    const { resellerId } = req.params;
-    const { period = 'month' } = req.query;
-
-    // Calculate date range based on period
-    const now = new Date();
-    let startDate;
+    const { resellerId, productId } = req.params;
     
-    switch (period) {
-      case 'day':
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case 'year':
-        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    // Get product information
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Get clicks and sales for the period
-    const clicks = await Click.find({
-      resellerId,
-      timestamp: { $gte: startDate }
+    // Track the click
+    const trackingResult = await trackingService.trackClick(req, resellerId, productId, product.name);
+    
+    if (!trackingResult.success) {
+      return res.status(500).json({ success: false, message: trackingResult.error });
+    }
+
+    // Redirect to product page with tracking parameters
+    const redirectUrl = new URL(product.purchaseUrl);
+    redirectUrl.searchParams.set('tracking_id', trackingResult.trackingId);
+    redirectUrl.searchParams.set('reseller_id', resellerId);
+    redirectUrl.searchParams.set('product_id', productId);
+    
+    // Add UTM parameters if present
+    if (req.query.utm_source) redirectUrl.searchParams.set('utm_source', req.query.utm_source);
+    if (req.query.utm_medium) redirectUrl.searchParams.set('utm_medium', req.query.utm_medium);
+    if (req.query.utm_campaign) redirectUrl.searchParams.set('utm_campaign', req.query.utm_campaign);
+    if (req.query.utm_term) redirectUrl.searchParams.set('utm_term', req.query.utm_term);
+    if (req.query.utm_content) redirectUrl.searchParams.set('utm_content', req.query.utm_content);
+
+    res.redirect(redirectUrl.toString());
+  } catch (error) {
+    console.error('Error tracking click:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Track conversion (webhook from payment processor)
+router.post('/conversion', async (req, res) => {
+  try {
+    const { trackingId, saleData } = req.body;
+    
+    if (!trackingId || !saleData) {
+      return res.status(400).json({ success: false, message: 'Missing required data' });
+    }
+
+    // Track the conversion
+    const conversionResult = await trackingService.trackConversion(trackingId, saleData);
+    
+    if (!conversionResult.success) {
+      return res.status(500).json({ success: false, message: conversionResult.error });
+    }
+
+    // Process commission payment
+    const paymentResult = await processCommissionPayment(saleData);
+    
+    // Check for achievements and level ups
+    await gamificationService.checkAchievements(saleData.resellerId);
+    await gamificationService.calculateLevel(saleData.resellerId);
+
+    res.json({
+      success: true,
+      conversionId: conversionResult.saleId,
+      paymentStatus: paymentResult.success ? 'processed' : 'pending'
     });
+  } catch (error) {
+    console.error('Error tracking conversion:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
-    const sales = await Sale.find({
-      resellerId,
-      timestamp: { $gte: startDate }
-    });
+// Get analytics for authenticated user
+router.get('/analytics', auth, async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    const resellerId = req.user.resellerId;
 
-    // Calculate statistics
-    const totalClicks = clicks.length;
-    const totalSales = sales.length;
-    const totalEarnings = sales.reduce((sum, sale) => sum + sale.commission, 0);
-    const conversionRate = totalClicks > 0 ? (totalSales / totalClicks) * 100 : 0;
-    const uniqueVisitors = new Set(clicks.map(click => click.ipAddress)).size;
+    const analytics = await trackingService.getResellerAnalytics(resellerId, period);
+    
+    if (!analytics.success) {
+      return res.status(500).json({ success: false, message: analytics.error });
+    }
 
-    // Get top products
-    const productStats = await Sale.aggregate([
-      {
-        $match: {
-          resellerId,
-          timestamp: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: '$productId',
-          sales: { $sum: 1 },
-          earnings: { $sum: '$commission' }
-        }
-      },
-      {
-        $sort: { earnings: -1 }
-      },
-      {
-        $limit: 5
-      }
+    res.json({ success: true, analytics: analytics.analytics });
+  } catch (error) {
+    console.error('Error getting analytics:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get detailed click analytics
+router.get('/clicks', auth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, startDate, endDate, source, device } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+    
+    if (source) {
+      query.$or = [
+        { utmSource: source },
+        { referrer: { $regex: source, $options: 'i' } }
+      ];
+    }
+    
+    if (device) {
+      query.deviceType = device;
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const [clicks, total] = await Promise.all([
+      Click.find(query)
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Click.countDocuments(query)
     ]);
 
     res.json({
       success: true,
-      stats: {
-        totalClicks,
-        totalSales,
-        conversionRate: parseFloat(conversionRate.toFixed(2)),
-        totalEarnings: parseFloat(totalEarnings.toFixed(2)),
-        uniqueVisitors,
-        topProducts: productStats
+      clicks,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
-    console.error('Error getting tracking stats:', error);
-    res.status(500).json({ success: false, message: 'Failed to get statistics' });
+    console.error('Error getting clicks:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
-// Get click history for reseller
-router.get('/clicks/:resellerId', auth, async (req, res) => {
+// Get detailed sales analytics
+router.get('/sales', auth, async (req, res) => {
   try {
-    const { resellerId } = req.params;
-    const { limit = 50 } = req.query;
+    const { page = 1, limit = 20, startDate, endDate, status, product } = req.query;
+    const resellerId = req.user.resellerId;
 
-    const clicks = await Click.find({ resellerId })
-      .sort({ timestamp: -1 })
-      .limit(parseInt(limit));
-
-    res.json({ success: true, clicks });
-  } catch (error) {
-    console.error('Error getting click history:', error);
-    res.status(500).json({ success: false, message: 'Failed to get click history' });
-  }
-});
-
-// Get conversion history for reseller
-router.get('/conversions/:resellerId', auth, async (req, res) => {
-  try {
-    const { resellerId } = req.params;
-    const { limit = 50 } = req.query;
-
-    const conversions = await Sale.find({ resellerId })
-      .sort({ timestamp: -1 })
-      .limit(parseInt(limit));
-
-    res.json({ success: true, conversions });
-  } catch (error) {
-    console.error('Error getting conversion history:', error);
-    res.status(500).json({ success: false, message: 'Failed to get conversion history' });
-  }
-});
-
-// Validate reseller ID from URL
-router.get('/validate/:resellerId', async (req, res) => {
-  try {
-    const { resellerId } = req.params;
-
-    // Check if reseller exists (you might want to check against User model)
-    // For now, we'll just validate the format
-    if (!resellerId || resellerId.length < 3) {
-      return res.json({ success: false, message: 'Invalid reseller ID' });
+    const query = { resellerId };
+    
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+    
+    if (status) {
+      query.paymentStatus = status;
+    }
+    
+    if (product) {
+      query.productName = { $regex: product, $options: 'i' };
     }
 
-    res.json({ success: true, message: 'Valid reseller ID' });
-  } catch (error) {
-    console.error('Error validating reseller ID:', error);
-    res.status(500).json({ success: false, message: 'Failed to validate reseller ID' });
-  }
-});
-
-// Get fraud detection data
-router.get('/fraud/:resellerId', auth, async (req, res) => {
-  try {
-    const { resellerId } = req.params;
-
-    // Get recent clicks for fraud analysis
-    const recentClicks = await Click.find({ resellerId })
-      .sort({ timestamp: -1 })
-      .limit(100);
-
-    // Simple fraud detection logic
-    const fraudIndicators = {
-      multipleClicksFromSameIP: false,
-      suspiciousUserAgents: false,
-      rapidClicking: false
-    };
-
-    // Check for multiple clicks from same IP
-    const ipCounts = {};
-    recentClicks.forEach(click => {
-      ipCounts[click.ipAddress] = (ipCounts[click.ipAddress] || 0) + 1;
-    });
-
-    const suspiciousIPs = Object.entries(ipCounts)
-      .filter(([ip, count]) => count > 10)
-      .map(([ip, count]) => ({ ip, count }));
-
-    if (suspiciousIPs.length > 0) {
-      fraudIndicators.multipleClicksFromSameIP = true;
-    }
-
-    // Check for rapid clicking (more than 5 clicks in 1 minute)
-    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-    const rapidClicks = recentClicks.filter(click => 
-      click.timestamp > oneMinuteAgo
-    );
-
-    if (rapidClicks.length > 5) {
-      fraudIndicators.rapidClicking = true;
-    }
+    const skip = (page - 1) * limit;
+    
+    const [sales, total] = await Promise.all([
+      Sale.find(query)
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Sale.countDocuments(query)
+    ]);
 
     res.json({
       success: true,
-      fraudIndicators,
-      suspiciousIPs,
-      recentClicksCount: recentClicks.length
+      sales,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
-    console.error('Error getting fraud data:', error);
-    res.status(500).json({ success: false, message: 'Failed to get fraud data' });
+    console.error('Error getting sales:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+// Get conversion funnel data
+router.get('/funnel', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const [clicks, sales] = await Promise.all([
+      Click.find(query),
+      Sale.find({ ...query, isVerified: true })
+    ]);
+
+    const funnel = {
+      clicks: clicks.length,
+      uniqueVisitors: new Set(clicks.map(c => c.ipAddress)).size,
+      sales: sales.length,
+      conversionRate: clicks.length > 0 ? (sales.length / clicks.length * 100).toFixed(2) : 0,
+      revenue: sales.reduce((sum, sale) => sum + sale.saleAmount, 0),
+      commission: sales.reduce((sum, sale) => sum + sale.commissionAmount, 0)
+    };
+
+    res.json({ success: true, funnel });
+  } catch (error) {
+    console.error('Error getting funnel data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get geographic analytics
+router.get('/geographic', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const [clickGeo, saleGeo] = await Promise.all([
+      Click.aggregate([
+        { $match: query },
+        { $group: { _id: '$country', clicks: { $sum: 1 } } },
+        { $sort: { clicks: -1 } },
+        { $limit: 10 }
+      ]),
+      Sale.aggregate([
+        { $match: { ...query, isVerified: true } },
+        { $group: { _id: '$country', sales: { $sum: 1 }, revenue: { $sum: '$saleAmount' } } },
+        { $sort: { sales: -1 } },
+        { $limit: 10 }
+      ])
+    ]);
+
+    res.json({
+      success: true,
+      geographic: {
+        clicks: clickGeo,
+        sales: saleGeo
+      }
+    });
+  } catch (error) {
+    console.error('Error getting geographic data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get device analytics
+router.get('/devices', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const [clickDevices, saleDevices] = await Promise.all([
+      Click.aggregate([
+        { $match: query },
+        { $group: { _id: '$deviceType', clicks: { $sum: 1 } } },
+        { $sort: { clicks: -1 } }
+      ]),
+      Sale.aggregate([
+        { $match: { ...query, isVerified: true } },
+        { $group: { _id: '$deviceType', sales: { $sum: 1 }, revenue: { $sum: '$saleAmount' } } },
+        { $sort: { sales: -1 } }
+      ])
+    ]);
+
+    res.json({
+      success: true,
+      devices: {
+        clicks: clickDevices,
+        sales: saleDevices
+      }
+    });
+  } catch (error) {
+    console.error('Error getting device data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get source analytics
+router.get('/sources', auth, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const [clickSources, saleSources] = await Promise.all([
+      Click.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $ne: ['$utmSource', null] },
+                '$utmSource',
+                { $cond: [{ $ne: ['$referrer', null] }, '$referrer', 'Direct'] }
+              ]
+            },
+            clicks: { $sum: 1 }
+          }
+        },
+        { $sort: { clicks: -1 } },
+        { $limit: 10 }
+      ]),
+      Sale.aggregate([
+        { $match: { ...query, isVerified: true } },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $ne: ['$utmSource', null] },
+                '$utmSource',
+                { $cond: [{ $ne: ['$referrer', null] }, '$referrer', 'Direct'] }
+              ]
+            },
+            sales: { $sum: 1 },
+            revenue: { $sum: '$saleAmount' }
+          }
+        },
+        { $sort: { sales: -1 } },
+        { $limit: 10 }
+      ])
+    ]);
+
+    res.json({
+      success: true,
+      sources: {
+        clicks: clickSources,
+        sales: saleSources
+      }
+    });
+  } catch (error) {
+    console.error('Error getting source data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get time series data
+router.get('/timeseries', auth, async (req, res) => {
+  try {
+    const { startDate, endDate, interval = 'day' } = req.query;
+    const resellerId = req.user.resellerId;
+
+    const query = { resellerId };
+    if (startDate && endDate) {
+      query.timestamp = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const [clickTimeSeries, saleTimeSeries] = await Promise.all([
+      Click.getTimeSeriesData(resellerId, new Date(startDate), new Date(endDate), interval),
+      Sale.getTimeSeriesData(resellerId, new Date(startDate), new Date(endDate), interval)
+    ]);
+
+    res.json({
+      success: true,
+      timeSeries: {
+        clicks: clickTimeSeries,
+        sales: saleTimeSeries
+      }
+    });
+  } catch (error) {
+    console.error('Error getting time series data:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Process commission payment
+async function processCommissionPayment(saleData) {
+  try {
+    // Calculate commission with level bonuses
+    const user = await User.findOne({ resellerId: saleData.resellerId });
+    const levelInfo = await gamificationService.calculateLevel(saleData.resellerId);
+    
+    let commissionAmount = saleData.commissionAmount;
+    if (levelInfo.benefits.commissionBonus > 0) {
+      commissionAmount += (saleData.commissionAmount * levelInfo.benefits.commissionBonus / 100);
+    }
+
+    // Send payment to Beam Wallet
+    const paymentResult = await beamWalletService.sendPayment(
+      saleData.resellerId,
+      commissionAmount,
+      saleData.paymentId,
+      `Commission for ${saleData.productName}`
+    );
+
+    if (paymentResult.success) {
+      // Update sale record
+      await Sale.findOneAndUpdate(
+        { trackingId: saleData.trackingId },
+        {
+          commissionAmount,
+          commissionStatus: 'paid',
+          commissionPaidAt: new Date()
+        }
+      );
+    }
+
+    return paymentResult;
+  } catch (error) {
+    console.error('Error processing commission payment:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 module.exports = router; 

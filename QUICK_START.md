@@ -1,173 +1,223 @@
-# 🚀 Beam Affiliate Platform - Quick Start Guide
+# ⚡ Beam Affiliate Platform - Quick Start Guide
 
-## ✅ What's Been Built
+## 🚀 Deploy in 5 Minutes
 
-I've created a **complete, professional Beam Affiliate Platform** that implements all the features from your specifications:
-
-### 🏗️ **Complete Architecture**
-- **Frontend**: React 18 + TypeScript + Tailwind CSS
-- **Backend**: Node.js + Express + MongoDB
-- **Authentication**: JWT + bcryptjs
-- **Security**: Helmet, CORS, Rate Limiting
-- **Payment**: Stripe + Beam Wallet integration
-
-### 🎯 **Key Features Implemented**
-
-#### **For Resellers:**
-- ✅ Free registration with unique reseller ID
-- ✅ Personal dashboard with real-time statistics
-- ✅ Automatic affiliate link generation
-- ✅ Commission tracking and payment history
-- ✅ Profile management and account settings
-- ✅ Mobile-responsive design
-
-#### **For Customers:**
-- ✅ Secure payment processing
-- ✅ Product catalog with clear pricing
-- ✅ Affiliate link tracking
-- ✅ Payment validation system
-
-#### **Platform Features:**
-- ✅ Real-time analytics and reporting
-- ✅ Anti-fraud system with IP tracking
-- ✅ Automatic commission calculations
-- ✅ Direct Beam Wallet payments
-- ✅ Professional UI/UX design
-
-## 🚀 **How to Start the Platform**
-
-### **Option 1: Quick Start (Recommended)**
-```bash
-# Navigate to the project directory
-cd beam-affiliate-platform
-
-# Run the startup script
-./start.sh
-```
-
-### **Option 2: Manual Start**
-```bash
-# Terminal 1 - Start Backend
-cd backend
-node test-server.js
-
-# Terminal 2 - Start Frontend  
-cd frontend
-PORT=3001 npm start
-```
-
-## 🌐 **Access the Platform**
-
-Once started, you can access:
-
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:5000
-- **Health Check**: http://localhost:5000/health
-
-## 🧪 **Test the Platform**
-
-### **1. Register as a Reseller**
-- Go to http://localhost:3001
-- Click "Start Earning" or "Register"
-- Fill in your details
-- Get your unique reseller ID
-
-### **2. Access Your Dashboard**
-- Login with your credentials
-- View your statistics and earnings
-- Get your affiliate links
-- Track your performance
-
-### **3. Test Affiliate Links**
-- Copy your affiliate links from the dashboard
-- Share them or test them directly
-- See how the tracking works
-
-### **4. Test Payment Flow**
-- Use an affiliate link to access the payment page
-- Fill in customer details
-- Complete a test purchase
-- See the commission tracking
-
-## 📊 **Business Logic Implemented**
-
-### **Reseller Flow:**
-1. User registers → Gets unique reseller ID
-2. Accesses product catalog → Gets affiliate links
-3. Shares links → Tracks clicks and conversions
-4. Customer purchases → System validates payment
-5. Commission calculated → Automatically credited
-6. Payment sent → Direct to Beam Wallet
-
-### **Commission System:**
-- **Beam Wallet Installation**: $75 → 50% commission ($37.50)
-- **Commercial Agent License**: $150 → 40% commission ($60)
-- **Premium Support**: $200 → 35% commission ($70)
-
-### **Security Features:**
-- JWT authentication
-- Password hashing
-- Rate limiting
-- CORS protection
-- Input validation
-- Fraud prevention
-
-## 🎨 **Professional Design Features**
-
-- **Modern UI**: Clean, professional design
-- **Mobile Responsive**: Works on all devices
-- **Real-time Charts**: Performance visualization
-- **Interactive Elements**: Hover effects, animations
-- **Professional Branding**: Beam Wallet integration
-- **User Experience**: Intuitive navigation
-
-## 🔧 **Technical Highlights**
-
-### **Frontend:**
-- React 18 with TypeScript
-- Tailwind CSS for styling
-- React Router for navigation
-- Recharts for data visualization
-- Heroicons for icons
-- Axios for API communication
-
-### **Backend:**
-- Node.js with Express
-- MongoDB with Mongoose
-- JWT authentication
-- bcryptjs password hashing
-- Stripe payment processing
-- Nodemailer for emails
-- Security middleware
-
-## 📁 **Project Structure**
-```
-beam-affiliate-platform/
-├── frontend/          # React application
-├── backend/           # Node.js API
-├── start.sh          # Quick start script
-├── README.md         # Detailed documentation
-└── QUICK_START.md    # This guide
-```
-
-## 🎉 **Ready to Use!**
-
-The platform is **fully functional** and ready for:
-
-- ✅ **Demo presentations**
-- ✅ **Client meetings**
-- ✅ **Development testing**
-- ✅ **Production deployment**
-
-## 🆘 **Need Help?**
-
-If you encounter any issues:
-
-1. **Check the logs** in the terminal
-2. **Verify ports** are not in use
-3. **Restart the servers** using the start script
-4. **Check the README.md** for detailed instructions
+### **Prerequisites**
+- Docker and Docker Compose installed
+- Domain name configured
+- Basic server knowledge
 
 ---
 
-**🎯 This is a production-ready affiliate platform that looks and feels like it was built by an experienced development team!** 
+## 📋 **Step 1: Clone & Setup**
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/beam-affiliate-platform.git
+cd beam-affiliate-platform
+
+# Make deployment script executable
+chmod +x deploy.sh
+```
+
+---
+
+## ⚙️ **Step 2: Configure Environment**
+
+Create `.env.production` file:
+
+```bash
+# Database
+MONGODB_URI=mongodb://mongo:27017/beam_affiliate
+REDIS_URL=redis://redis:6379
+
+# Security
+JWT_SECRET=your-super-secure-32-character-secret-key-here
+ENCRYPTION_KEY=your-32-character-encryption-key-here
+
+# Payment (Get from Stripe Dashboard)
+STRIPE_SECRET_KEY=your_stripe_secret_key_hereyour_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# Email (Gmail recommended)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Application
+NODE_ENV=production
+FRONTEND_URL=https://your-domain.com
+BACKEND_URL=https://api.your-domain.com
+
+# Passwords
+REDIS_PASSWORD=your-redis-password
+MONGO_ROOT_PASSWORD=your-mongo-password
+GRAFANA_PASSWORD=your-grafana-password
+```
+
+---
+
+## 🚀 **Step 3: Deploy**
+
+```bash
+# Deploy everything
+./deploy.sh production
+```
+
+**That's it!** Your platform is now running.
+
+---
+
+## 🌐 **Step 4: Access Your Platform**
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Frontend** | https://your-domain.com | Register new account |
+| **Backend API** | https://api.your-domain.com | - |
+| **API Docs** | https://api.your-domain.com/api-docs | - |
+| **Admin Dashboard** | https://your-domain.com/admin/dashboard | admin@your-domain.com / SecurePassword123! |
+| **Grafana** | https://your-domain.com:3001 | admin / your-grafana-password |
+| **Prometheus** | https://your-domain.com:9090 | - |
+
+---
+
+## ⚡ **Step 5: Quick Configuration**
+
+### **1. Create Admin User**
+```bash
+curl -X POST https://api.your-domain.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Admin",
+    "lastName": "User", 
+    "email": "admin@your-domain.com",
+    "password": "SecurePassword123!",
+    "isAdmin": true
+  }'
+```
+
+### **2. Add Your First Product**
+```bash
+curl -X POST https://api.your-domain.com/api/admin/products \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{
+    "name": "Beam Wallet Installation",
+    "description": "Professional Beam Wallet installation service",
+    "price": 75.00,
+    "commissionRate": 50,
+    "category": "Services"
+  }'
+```
+
+### **3. Configure Payment Gateway**
+- Go to Stripe Dashboard
+- Get your API keys
+- Update environment variables
+- Test a payment
+
+---
+
+## 📊 **Step 6: Monitor & Optimize**
+
+### **Check Health**
+```bash
+# Application health
+curl https://api.your-domain.com/health
+
+# View logs
+docker-compose -f backend/docker-compose.yml logs -f
+```
+
+### **Performance Monitoring**
+- **Grafana**: Real-time dashboards
+- **Prometheus**: Metrics collection
+- **Kibana**: Log analysis
+
+---
+
+## 🎯 **Next Steps**
+
+1. **Customize Branding**
+   - Update logos and colors
+   - Modify content and copy
+   - Configure email templates
+
+2. **Add Products**
+   - Upload product images
+   - Set commission rates
+   - Create affiliate links
+
+3. **Train ML Models**
+   - Feed historical data
+   - Improve fraud detection
+   - Enhance recommendations
+
+4. **Launch Marketing**
+   - Create landing pages
+   - Set up email campaigns
+   - Begin user acquisition
+
+---
+
+## 🔧 **Troubleshooting**
+
+### **Common Issues**
+
+**Port Already in Use**
+```bash
+# Stop existing services
+docker-compose -f backend/docker-compose.yml down
+
+# Check what's using the port
+sudo lsof -i :80
+sudo lsof -i :443
+```
+
+**Database Connection Issues**
+```bash
+# Check MongoDB
+docker exec beam-affiliate-mongo mongosh --eval "db.adminCommand('ping')"
+
+# Check Redis
+docker exec beam-affiliate-redis redis-cli ping
+```
+
+**SSL Certificate Issues**
+```bash
+# Check certificate status
+sudo certbot certificates
+
+# Renew certificates
+sudo certbot renew
+```
+
+---
+
+## 📞 **Support**
+
+- **Documentation**: `/docs` directory
+- **API Docs**: https://api.your-domain.com/api-docs
+- **Deployment Guide**: `DEPLOYMENT_GUIDE.md`
+- **Project Completion**: `PROJECT_COMPLETION.md`
+
+---
+
+## 🎉 **Success!**
+
+Your **Beam Affiliate Platform** is now live and ready to generate revenue!
+
+**Key Features Available:**
+- ✅ User registration and management
+- ✅ Product catalog and affiliate links
+- ✅ Commission tracking and payments
+- ✅ Real-time analytics and reporting
+- ✅ Admin panel with full control
+- ✅ Machine learning and AI
+- ✅ Multi-language support
+- ✅ Advanced security features
+- ✅ Marketing automation
+- ✅ Real-time notifications
+
+**Ready to start earning!** 🚀 

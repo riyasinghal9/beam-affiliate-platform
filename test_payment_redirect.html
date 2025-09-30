@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment Redirect</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        #output { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Payment Redirect</h1>
+        
+        <div class="test-section info">
+            <h3>Test Parameters</h3>
+            <p><strong>Price:</strong> 199.99</p>
+            <p><strong>Reseller ID:</strong> test123</p>
+            <p><strong>Product ID:</strong> 68aef08bad44459caa3fd945</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Actions</h3>
+            <button class="btn-primary" onclick="testRedirect()">Test Redirect Logic</button>
+            <button class="btn-secondary" onclick="testPaymentPage()">Test Payment Page</button>
+            <button class="btn-secondary" onclick="testStoreUrl()">Test Store URL</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+
+        function testRedirect() {
+            log('Testing redirect logic...');
+            
+            // Simulate the redirect logic from PaymentPage.tsx
+            const price = '199.99';
+            const resellerId = 'test123';
+            const productId = '68aef08bad44459caa3fd945';
+            const utmSource = 'affiliate';
+            const utmMedium = 'link';
+            const utmCampaign = 'beam_affiliate';
+
+            // Generate store URL
+            const baseStoreUrl = 'https://shop.beamwallet.com/pt/product/for-online-stores';
+            const trackingParams = new URLSearchParams({
+                affiliate_id: resellerId,
+                product_id: productId,
+                product_price: price,
+                utm_source: utmSource,
+                utm_medium: utmMedium,
+                utm_campaign: utmCampaign,
+                ref: 'beam_affiliate_platform'
+            });
+            
+            const finalStoreUrl = `${baseStoreUrl}?${trackingParams.toString()}`;
+            
+            log('Generated store URL: ' + finalStoreUrl);
+            
+            // Test the URL
+            fetch(finalStoreUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (response.status === 200) {
+                        log('✅ Store URL is accessible (Status: ' + response.status + ')');
+                    } else {
+                        log('⚠️ Store URL returned status: ' + response.status);
+                    }
+                })
+                .catch(error => {
+                    log('❌ Error accessing store URL: ' + error.message);
+                });
+        }
+
+        function testPaymentPage() {
+            log('Testing payment page...');
+            const paymentUrl = 'http://localhost:3000/payment?v=199.99&id=test123&product=68aef08bad44459caa3fd945';
+            
+            fetch(paymentUrl)
+                .then(response => {
+                    if (response.ok) {
+                        log('✅ Payment page is accessible (Status: ' + response.status + ')');
+                        return response.text();
+                    } else {
+                        log('❌ Payment page error: ' + response.status);
+                    }
+                })
+                .then(html => {
+                    if (html) {
+                        // Check if the page contains redirect-related content
+                        if (html.includes('Redirecting to Store') || html.includes('shop.beamwallet.com')) {
+                            log('✅ Payment page contains redirect content');
+                        } else {
+                            log('⚠️ Payment page does not contain redirect content');
+                        }
+                    }
+                })
+                .catch(error => {
+                    log('❌ Error accessing payment page: ' + error.message);
+                });
+        }
+
+        function testStoreUrl() {
+            log('Testing store URL directly...');
+            const storeUrl = 'https://shop.beamwallet.com/pt/product/for-online-stores?affiliate_id=test123&product_id=68aef08bad44459caa3fd945&product_price=199.99&utm_source=affiliate&utm_medium=link&utm_campaign=beam_affiliate&ref=beam_affiliate_platform';
+            
+            // Open the store URL in a new tab
+            window.open(storeUrl, '_blank');
+            log('✅ Store URL opened in new tab');
+        }
+
+        // Run initial test
+        window.onload = function() {
+            log('Page loaded, running initial tests...');
+            testRedirect();
+        };
+    </script>
+</body>
+</html>

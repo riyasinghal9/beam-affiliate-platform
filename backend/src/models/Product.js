@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Installation', 'License', 'Service', 'Other']
+    enum: ['Installation', 'License', 'Service', 'Token', 'Wallet', 'DeFi', 'Other']
   },
   isActive: {
     type: Boolean,
@@ -32,6 +32,14 @@ const productSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String
+  },
+  externalUrl: {
+    type: String,
+    trim: true
+  },
+  externalShopUrl: {
+    type: String,
+    trim: true
   },
   features: [{
     type: String
@@ -42,6 +50,26 @@ const productSchema = new mongoose.Schema({
   sortOrder: {
     type: Number,
     default: 0
+  },
+  // Additional Beam Wallet specific fields
+  beamWalletProductId: {
+    type: String,
+    trim: true
+  },
+  productType: {
+    type: String,
+    enum: ['service', 'license', 'token', 'installation', 'support'],
+    default: 'service'
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  longDescription: {
+    type: String
+  },
+  thumbnailUrl: {
+    type: String
   }
 }, {
   timestamps: true

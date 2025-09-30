@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from '../components/layout/Navbar';
 import { 
   CheckCircleIcon, 
   XCircleIcon, 
@@ -23,9 +24,23 @@ interface Payment {
 
 interface PaymentStats {
   totalPayments: number;
-  pendingApprovals: number;
+  pendingPayments: number;
+  approvedPayments: number;
+  rejectedPayments: number;
   totalRevenue: number;
-  totalCommissions: number;
+  monthlyStats: {
+    payments: number;
+    revenue: number;
+  };
+  weeklyStats: {
+    payments: number;
+    revenue: number;
+  };
+  statusBreakdown: Array<{
+    _id: string;
+    count: number;
+    totalAmount: number;
+  }>;
 }
 
 const AdminPayments: React.FC = () => {
@@ -43,7 +58,7 @@ const AdminPayments: React.FC = () => {
 
   const fetchPayments = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/payments/admin/all', {
+      const response = await fetch('http://localhost:5001/api/admin/payments/all', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -59,7 +74,7 @@ const AdminPayments: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/payments/admin/stats', {
+      const response = await fetch('http://localhost:5001/api/admin/payments/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -77,15 +92,19 @@ const AdminPayments: React.FC = () => {
 
   const handleApproval = async (paymentId: string, action: 'approve' | 'reject') => {
     try {
-      const response = await fetch(`http://localhost:5001/api/payments/admin/${paymentId}/approve`, {
+      const endpoint = action === 'approve' 
+        ? `http://localhost:5001/api/admin/payments/${paymentId}/approve`
+        : `http://localhost:5001/api/admin/payments/${paymentId}/reject`;
+      
+      const response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          action,
-          notes: approvalNotes
+          notes: approvalNotes,
+          reason: approvalNotes
         })
       });
 
@@ -97,6 +116,8 @@ const AdminPayments: React.FC = () => {
         fetchPayments();
         fetchStats();
         alert(`Payment ${action}d successfully!`);
+      } else {
+        alert(data.message || `Failed to ${action} payment`);
       }
     } catch (error) {
       console.error('Error updating payment:', error);
@@ -137,8 +158,9 @@ const AdminPayments: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-beam-grey-50">
+      <Navbar />
+      <div className="max-w-7xl mx-auto pt-16 px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
@@ -154,150 +176,152 @@ const AdminPayments: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg">
-                  <CurrencyDollarIcon className="h-7 w-7 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                  <p className="text-3xl font-bold text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
+          {/* Stats Cards */}
+          <div>
+            {stats && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                    <CurrencyDollarIcon className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-3xl font-bold text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                  <DocumentTextIcon className="h-7 w-7 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Payments</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalPayments}</p>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                    <DocumentTextIcon className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Payments</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalPayments}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg">
-                  <ClockIcon className="h-7 w-7 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg">
+                    <ClockIcon className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.pendingPayments}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
-                  <UserGroupIcon className="h-7 w-7 text-white" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Commissions</p>
-                  <p className="text-3xl font-bold text-gray-900">${stats.totalCommissions.toFixed(2)}</p>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                    <UserGroupIcon className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Approved Payments</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.approvedPayments}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Payments Table */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="px-6 py-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">Payment Requests</h3>
-                <p className="text-gray-600 mt-1">
-                  Review and approve payment requests from resellers
-                </p>
-              </div>
-              <div className="flex items-center text-sm text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg">
-                <ClockIcon className="h-4 w-4 mr-2" />
-                {stats?.pendingApprovals || 0} Pending
+          {/* Payments Table */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="px-6 py-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Payment Requests</h3>
+                  <p className="text-gray-600 mt-1">
+                    Review and approve payment requests from resellers
+                  </p>
+                </div>
+                <div className="flex items-center text-sm text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg">
+                  <ClockIcon className="h-4 w-4 mr-2" />
+                  {stats?.pendingPayments || 0} Pending
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Payment ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Reseller
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Commission
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {payments.map((payment) => (
-                  <tr key={payment.paymentId} className="hover:bg-gray-50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">{payment.paymentId}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{payment.customerName}</div>
-                      <div className="text-sm text-gray-500">{payment.customerEmail}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full inline-block">
-                        {payment.resellerId}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-green-600">${payment.amount.toFixed(2)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-blue-600">${payment.commissionAmount.toFixed(2)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(payment.adminApproval)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(payment.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {payment.adminApproval === 'pending' && (
-                        <button
-                          onClick={() => {
-                            setSelectedPayment(payment);
-                            setShowApprovalModal(true);
-                          }}
-                          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                        >
-                          Review
-                        </button>
-                      )}
-                    </td>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Payment ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Reseller
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Commission
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {payments.map((payment) => (
+                    <tr key={payment.paymentId} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{payment.paymentId}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{payment.customerName}</div>
+                        <div className="text-sm text-gray-500">{payment.customerEmail}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full inline-block">
+                          {payment.resellerId}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-600">${payment.amount.toFixed(2)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-blue-600">${payment.commissionAmount.toFixed(2)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payment.adminApproval)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(payment.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {payment.adminApproval === 'pending' && (
+                          <button
+                            onClick={() => {
+                              setSelectedPayment(payment);
+                              setShowApprovalModal(true);
+                            }}
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                          >
+                            Review
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

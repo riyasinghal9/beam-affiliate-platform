@@ -53,6 +53,7 @@ interface AuthResponse {
     balance: number;
     totalEarnings: number;
     totalSales: number;
+    isAdmin?: boolean;
   };
 }
 

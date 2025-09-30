@@ -1,5 +1,7 @@
 const CommissionRule = require('../models/CommissionRule');
 const User = require('../models/User');
+const { seedTrainingData } = require('./trainingSeeder');
+const { seedBeamWalletProducts } = require('./beamProductSeeder');
 
 const seedCommissionRules = async () => {
   try {
@@ -84,8 +86,10 @@ const runSeeders = async () => {
   
   await seedCommissionRules();
   await seedDefaultAdmin();
+  await seedTrainingData();
+  await seedBeamWalletProducts();
   
   console.log('✅ Database seeding completed!');
 };
 
-module.exports = { runSeeders, seedCommissionRules, seedDefaultAdmin }; 
+module.exports = { runSeeders, seedCommissionRules, seedDefaultAdmin, seedBeamWalletProducts }; 

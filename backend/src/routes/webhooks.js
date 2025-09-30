@@ -1,271 +1,757 @@
 const express = require('express');
 const router = express.Router();
-const beamWalletService = require('../services/beamWalletService');
-const emailService = require('../services/emailService');
-const Sale = require('../models/Sale');
-const Commission = require('../models/Commission');
-const User = require('../models/User');
+const webhookService = require('../services/webhookService');
+const { auth, adminAuth } = require('../middleware/auth');
 
-// Beam Wallet payment webhook
-router.post('/beam-wallet/payment', async (req, res) => {
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Webhook:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Unique webhook identifier
+ *         name:
+ *           type: string
+ *           description: Webhook name
+ *         url:
+ *           type: string
+ *           format: uri
+ *           description: Webhook endpoint URL
+ *         events:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of subscribed events
+ *         isActive:
+ *           type: boolean
+ *           description: Whether the webhook is active
+ *         secret:
+ *           type: string
+ *           description: Webhook secret for signature verification
+ *         headers:
+ *           type: object
+ *           description: Custom headers to include in webhook requests
+ *         retryConfig:
+ *           type: object
+ *           properties:
+ *             maxRetries:
+ *               type: number
+ *               description: Maximum number of retry attempts
+ *             retryDelay:
+ *               type: number
+ *               description: Initial retry delay in milliseconds
+ *             backoffMultiplier:
+ *               type: number
+ *               description: Exponential backoff multiplier
+ *             maxDelay:
+ *               type: number
+ *               description: Maximum retry delay in milliseconds
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *         lastTriggered:
+ *           type: string
+ *           format: date-time
+ *         successCount:
+ *           type: number
+ *         failureCount:
+ *           type: number
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Webhooks
+ *   description: Webhook management and monitoring
+ */
+
+/**
+ * @swagger
+ * /api/webhooks:
+ *   post:
+ *     summary: Register a new webhook
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - url
+ *               - events
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Webhook name
+ *               url:
+ *                 type: string
+ *                 format: uri
+ *                 description: Webhook endpoint URL
+ *               events:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of events to subscribe to
+ *               secret:
+ *                 type: string
+ *                 description: Custom secret for signature verification
+ *               headers:
+ *                 type: object
+ *                 description: Custom headers
+ *               retryConfig:
+ *                 type: object
+ *                 description: Retry configuration
+ *               isActive:
+ *                 type: boolean
+ *                 default: true
+ *               metadata:
+ *                 type: object
+ *                 description: Additional metadata
+ *     responses:
+ *       201:
+ *         description: Webhook registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 webhook:
+ *                   $ref: '#/components/schemas/Webhook'
+ *       400:
+ *         description: Invalid webhook data
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/', adminAuth, async (req, res) => {
   try {
-    const webhookData = req.body;
+    const result = await webhookService.registerWebhook(req.body);
     
-    // Verify webhook signature (implement proper verification)
-    // const signature = req.headers['x-beam-signature'];
-    // if (!verifySignature(webhookData, signature)) {
-    //   return res.status(401).json({ error: 'Invalid signature' });
-    // }
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Error registering webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
-    // Process the webhook
-    const result = await beamWalletService.handlePaymentWebhook(webhookData);
-    
+/**
+ * @swagger
+ * /api/webhooks:
+ *   get:
+ *     summary: Get all webhooks
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filter by active status
+ *       - in: query
+ *         name: events
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filter by event types
+ *     responses:
+ *       200:
+ *         description: List of webhooks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 webhooks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Webhook'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/', adminAuth, async (req, res) => {
+  try {
+    const filters = {};
+    if (req.query.isActive !== undefined) {
+      filters.isActive = req.query.isActive === 'true';
+    }
+    if (req.query.events) {
+      filters.events = Array.isArray(req.query.events) ? req.query.events : [req.query.events];
+    }
+
+    const result = await webhookService.getAllWebhooks(filters);
     res.json(result);
   } catch (error) {
-    console.error('Webhook processing error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
+    console.error('Error getting webhooks:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Stripe webhook
-router.post('/stripe/payment', async (req, res) => {
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}:
+ *   get:
+ *     summary: Get webhook by ID
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     responses:
+ *       200:
+ *         description: Webhook details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 webhook:
+ *                   $ref: '#/components/schemas/Webhook'
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:webhookId', adminAuth, async (req, res) => {
   try {
-    const event = req.body;
+    const result = await webhookService.getWebhook(req.params.webhookId);
     
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await handleStripePaymentSuccess(event.data.object);
-        break;
-      case 'payment_intent.payment_failed':
-        await handleStripePaymentFailure(event.data.object);
-        break;
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
     }
-    
-    res.json({ received: true });
   } catch (error) {
-    console.error('Stripe webhook error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
+    console.error('Error getting webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Handle successful Stripe payment
-async function handleStripePaymentSuccess(paymentIntent) {
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}:
+ *   put:
+ *     summary: Update webhook
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *                 format: uri
+ *               events:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               headers:
+ *                 type: object
+ *               isActive:
+ *                 type: boolean
+ *               retryConfig:
+ *                 type: object
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Webhook updated successfully
+ *       400:
+ *         description: Invalid update data
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.put('/:webhookId', adminAuth, async (req, res) => {
   try {
-    const { resellerId, productId, customerEmail, customerName } = paymentIntent.metadata;
+    const result = await webhookService.updateWebhook(req.params.webhookId, req.body);
     
-    // Find the sale record
-    const sale = await Sale.findOne({
-      resellerId,
-      productId,
-      customerEmail,
-      status: 'pending'
-    });
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Error updating webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
-    if (!sale) {
-      console.error('Sale not found for payment:', paymentIntent.id);
-      return;
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}:
+ *   delete:
+ *     summary: Delete webhook
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     responses:
+ *       200:
+ *         description: Webhook deleted successfully
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:webhookId', adminAuth, async (req, res) => {
+  try {
+    const result = await webhookService.deleteWebhook(req.params.webhookId);
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    console.error('Error deleting webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}/test:
+ *   post:
+ *     summary: Test webhook endpoint
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     responses:
+ *       200:
+ *         description: Test result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 status:
+ *                   type: number
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/:webhookId/test', adminAuth, async (req, res) => {
+  try {
+    const webhook = await webhookService.getWebhook(req.params.webhookId);
+    
+    if (!webhook.success) {
+      return res.status(404).json(webhook);
     }
 
-    // Update sale status
-    sale.status = 'confirmed';
-    sale.paymentReference = paymentIntent.id;
-    await sale.save();
+    const result = await webhookService.testWebhook(webhook.webhook);
+    res.json(result);
+  } catch (error) {
+    console.error('Error testing webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
-    // Calculate and create commission
-    const commission = new Commission({
-      resellerId: sale.resellerId,
-      productId: sale.productId,
-      productName: sale.productName || 'Beam Wallet Service',
-      saleAmount: sale.amount,
-      commissionAmount: sale.commission,
-      commissionRate: 50, // This should come from commission rules
-      status: 'pending',
-      saleDate: sale.timestamp,
-      saleId: sale._id
-    });
-
-    await commission.save();
-
-    // Update user stats
-    const user = await User.findOne({ resellerId: sale.resellerId });
-    if (user) {
-      user.totalSales += 1;
-      user.totalEarnings += sale.commission;
-      await user.save();
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}/trigger:
+ *   post:
+ *     summary: Manually trigger webhook
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - eventType
+ *               - eventData
+ *             properties:
+ *               eventType:
+ *                 type: string
+ *                 description: Event type to trigger
+ *               eventData:
+ *                 type: object
+ *                 description: Event data payload
+ *     responses:
+ *       200:
+ *         description: Webhook triggered successfully
+ *       400:
+ *         description: Invalid event data
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/:webhookId/trigger', adminAuth, async (req, res) => {
+  try {
+    const { eventType, eventData } = req.body;
+    
+    if (!eventType || !eventData) {
+      return res.status(400).json({
+        success: false,
+        error: 'eventType and eventData are required'
+      });
     }
 
-    // Send notification email
-    await emailService.sendCommissionNotification(
-      customerEmail,
-      customerName,
-      {
-        amount: sale.commission,
-        productName: sale.productName || 'Beam Wallet Service',
-        saleAmount: sale.amount,
-        rate: 50
-      }
+    const result = await webhookService.triggerWebhook(
+      req.params.webhookId,
+      eventType,
+      eventData
     );
-
-    console.log('Payment processed successfully:', paymentIntent.id);
-  } catch (error) {
-    console.error('Error processing successful payment:', error);
-  }
-}
-
-// Handle failed Stripe payment
-async function handleStripePaymentFailure(paymentIntent) {
-  try {
-    const { resellerId, productId, customerEmail } = paymentIntent.metadata;
     
-    // Update sale status
-    await Sale.updateOne(
-      {
-        resellerId,
-        productId,
-        customerEmail,
-        status: 'pending'
-      },
-      {
-        status: 'failed',
-        paymentReference: paymentIntent.id
-      }
-    );
-
-    console.log('Payment failed:', paymentIntent.id);
-  } catch (error) {
-    console.error('Error processing failed payment:', error);
-  }
-}
-
-// Manual payment proof upload webhook
-router.post('/manual-proof', async (req, res) => {
-  try {
-    const { paymentId, proofUrl, adminNotes } = req.body;
-    
-    // Find the payment
-    const sale = await Sale.findById(paymentId);
-    if (!sale) {
-      return res.status(404).json({ error: 'Payment not found' });
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
     }
-
-    // Update payment with proof
-    sale.paymentProof = proofUrl;
-    sale.adminNotes = adminNotes;
-    sale.status = 'pending_verification';
-    await sale.save();
-
-    // Notify admin for manual verification
-    // This could trigger an email to admin or update admin dashboard
-
-    res.json({ success: true, message: 'Payment proof uploaded successfully' });
   } catch (error) {
-    console.error('Manual proof upload error:', error);
-    res.status(500).json({ error: 'Failed to upload payment proof' });
+    console.error('Error triggering webhook:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Admin payment approval webhook
-router.post('/admin/approve-payment', async (req, res) => {
+/**
+ * @swagger
+ * /api/webhooks/events/trigger:
+ *   post:
+ *     summary: Trigger event for all subscribed webhooks
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - eventType
+ *               - eventData
+ *             properties:
+ *               eventType:
+ *                 type: string
+ *                 description: Event type to trigger
+ *               eventData:
+ *                 type: object
+ *                 description: Event data payload
+ *               webhookIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Specific webhook IDs to trigger (optional)
+ *     responses:
+ *       200:
+ *         description: Event triggered successfully
+ *       400:
+ *         description: Invalid event data
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/events/trigger', adminAuth, async (req, res) => {
   try {
-    const { paymentId, adminId, approvalNotes } = req.body;
+    const { eventType, eventData, webhookIds } = req.body;
     
-    // Find the payment
-    const sale = await Sale.findById(paymentId);
-    if (!sale) {
-      return res.status(404).json({ error: 'Payment not found' });
+    if (!eventType || !eventData) {
+      return res.status(400).json({
+        success: false,
+        error: 'eventType and eventData are required'
+      });
     }
 
-    // Update payment status
-    sale.status = 'confirmed';
-    sale.adminApproval = {
-      adminId,
-      approvedAt: new Date(),
-      notes: approvalNotes
-    };
-    await sale.save();
-
-    // Create commission
-    const commission = new Commission({
-      resellerId: sale.resellerId,
-      productId: sale.productId,
-      productName: sale.productName || 'Beam Wallet Service',
-      saleAmount: sale.amount,
-      commissionAmount: sale.commission,
-      commissionRate: 50,
-      status: 'pending',
-      saleDate: sale.timestamp,
-      saleId: sale._id
-    });
-
-    await commission.save();
-
-    // Update user stats
-    const user = await User.findOne({ resellerId: sale.resellerId });
-    if (user) {
-      user.totalSales += 1;
-      user.totalEarnings += sale.commission;
-      await user.save();
-    }
-
-    // Send notification
-    await emailService.sendCommissionNotification(
-      user.email,
-      `${user.firstName} ${user.lastName}`,
-      {
-        amount: sale.commission,
-        productName: sale.productName || 'Beam Wallet Service',
-        saleAmount: sale.amount,
-        rate: 50
-      }
-    );
-
-    res.json({ success: true, message: 'Payment approved successfully' });
+    const result = await webhookService.bulkTriggerWebhooks(eventType, eventData, webhookIds);
+    res.json(result);
   } catch (error) {
-    console.error('Payment approval error:', error);
-    res.status(500).json({ error: 'Failed to approve payment' });
+    console.error('Error triggering event:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Admin payment rejection webhook
-router.post('/admin/reject-payment', async (req, res) => {
+/**
+ * @swagger
+ * /api/webhooks/statistics:
+ *   get:
+ *     summary: Get webhook statistics
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     responses:
+ *       200:
+ *         description: Webhook statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: number
+ *                     active:
+ *                       type: number
+ *                     inactive:
+ *                       type: number
+ *                     totalSuccess:
+ *                       type: number
+ *                     totalFailures:
+ *                       type: number
+ *                     successRate:
+ *                       type: number
+ *                     byEventType:
+ *                       type: object
+ *                     recentActivity:
+ *                       type: array
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/statistics', adminAuth, async (req, res) => {
   try {
-    const { paymentId, adminId, rejectionReason } = req.body;
-    
-    // Find the payment
-    const sale = await Sale.findById(paymentId);
-    if (!sale) {
-      return res.status(404).json({ error: 'Payment not found' });
-    }
-
-    // Update payment status
-    sale.status = 'rejected';
-    sale.adminRejection = {
-      adminId,
-      rejectedAt: new Date(),
-      reason: rejectionReason
-    };
-    await sale.save();
-
-    // Send notification to reseller
-    const user = await User.findOne({ resellerId: sale.resellerId });
-    if (user) {
-      await emailService.sendPaymentRejectionNotification(
-        user.email,
-        `${user.firstName} ${user.lastName}`,
-        {
-          amount: sale.amount,
-          productName: sale.productName || 'Beam Wallet Service',
-          reason: rejectionReason
-        }
-      );
-    }
-
-    res.json({ success: true, message: 'Payment rejected successfully' });
+    const result = await webhookService.getWebhookStatistics();
+    res.json(result);
   } catch (error) {
-    console.error('Payment rejection error:', error);
-    res.status(500).json({ error: 'Failed to reject payment' });
+    console.error('Error getting webhook statistics:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/webhooks/health:
+ *   get:
+ *     summary: Check webhook health
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     responses:
+ *       200:
+ *         description: Webhook health status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: number
+ *                     healthy:
+ *                       type: number
+ *                     unhealthy:
+ *                       type: number
+ *                     inactive:
+ *                       type: number
+ *                     error:
+ *                       type: number
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       webhookId:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       error:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/health', adminAuth, async (req, res) => {
+  try {
+    const result = await webhookService.healthCheck();
+    res.json(result);
+  } catch (error) {
+    console.error('Error checking webhook health:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/webhooks/{webhookId}/export:
+ *   get:
+ *     summary: Export webhook configuration
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook ID
+ *     responses:
+ *       200:
+ *         description: Webhook configuration
+ *       404:
+ *         description: Webhook not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:webhookId/export', adminAuth, async (req, res) => {
+  try {
+    const result = await webhookService.exportWebhookConfig(req.params.webhookId);
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    console.error('Error exporting webhook config:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/webhooks/import:
+ *   post:
+ *     summary: Import webhook configuration
+ *     tags: [Webhooks]
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - url
+ *               - events
+ *             properties:
+ *               name:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *                 format: uri
+ *               events:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               headers:
+ *                 type: object
+ *               retryConfig:
+ *                 type: object
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Webhook imported successfully
+ *       400:
+ *         description: Invalid configuration
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/import', adminAuth, async (req, res) => {
+  try {
+    const result = await webhookService.importWebhookConfig(req.body);
+    
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Error importing webhook config:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 

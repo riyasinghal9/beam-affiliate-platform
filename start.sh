@@ -12,7 +12,7 @@ sleep 2
 # Start backend
 echo "🔧 Starting backend server..."
 cd backend
-PORT=5001 node test-server.js &
+PORT=5001 node src/server.js &
 BACKEND_PID=$!
 cd ..
 

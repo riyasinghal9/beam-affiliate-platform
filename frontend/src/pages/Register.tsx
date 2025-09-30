@@ -1,299 +1,282 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { authService } from '../services/authService';
+import BeamLogo from '../components/ui/BeamLogo';
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  beamWalletNumber: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const Register: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
+    beamWalletNumber: '',
     password: '',
-    confirmPassword: '',
-    phone: '',
-    beamNumber: ''
+    confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError(''); // Clear error when user types
-  };
-
-  const validateForm = () => {
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-    return true;
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    setError('');
+    setLoading(true);
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError('');
-
     try {
-      const { confirmPassword, ...registerData } = formData;
-      await register(registerData);
-      navigate('/dashboard');
+      const response = await authService.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        beamNumber: formData.beamWalletNumber
+      });
+
+      if (response.success) {
+        setSuccess(true);
+        setLoading(false);
+        
+        // Show success message for 2 seconds then redirect
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! You can now log in with your email and password.',
+              email: formData.email 
+            } 
+          });
+        }, 2000);
+      } else {
+        setError('Registration failed');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-sm sm:max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-2xl">B</span>
+    <div className="min-h-screen bg-gradient-to-br from-beam-pink-50 to-beam-purple-50 pt-16">
+      <div className="flex flex-col justify-center min-h-[calc(100vh-4rem)] py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md lg:max-w-lg">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <BeamLogo size="xl" showWordmark={true} />
             </div>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-nunito-extrabold text-beam-charcoal-900 mb-2 sm:mb-3 tracking-beam-tight">
+              Start Earning Today
+            </h2>
+            <p className="text-sm sm:text-base font-nunito-regular text-beam-charcoal-700 tracking-beam-normal">
+              Join the Beam Affiliate Program and start earning commissions
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Create your account
-          </h2>
-          <p className="text-gray-600">
-            Start earning money online with Beam Wallet
-          </p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md lg:max-w-lg">
+          <div className="bg-white py-6 sm:py-8 px-4 sm:px-6 shadow-beam rounded-2xl">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-nunito-regular text-red-600">{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-nunito-regular text-green-600">✅ Registration successful! Redirecting to login...</p>
               </div>
             )}
 
-            {/* Name Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              {/* Name Fields */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                    First name
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    autoComplete="given-name"
+                    
+                    disabled={success}
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 disabled:bg-beam-grey-100 disabled:cursor-not-allowed font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                    Last name
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    
+                    disabled={success}
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 disabled:bg-beam-grey-100 disabled:cursor-not-allowed font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
+                    placeholder="Enter your last name"
+                  />
+                </div>
+              </div>
+
+              {/* Email Field */}
               <div>
-                <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
-                  First name
+                <label htmlFor="email" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                  Email address
                 </label>
                 <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  required
-                  value={formData.firstName}
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  
+                  value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your first name"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
+                  placeholder="Enter your email address"
                 />
               </div>
 
+              {/* Beam Wallet Number Field */}
               <div>
-                <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Last name
+                <label htmlFor="beamWalletNumber" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                  Enter your Beam Wallet number (Optional)
                 </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your last name"
-                />
-              </div>
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter your email"
-              />
-            </div>
-
-            {/* Phone and Beam Number Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Phone number (optional)
-                </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your phone number"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="beamNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Beam Wallet Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="beamNumber"
-                  name="beamNumber"
-                  type="text"
-                  required
-                  value={formData.beamNumber}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your Beam Wallet number"
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  This is where your commissions will be automatically paid
+                <p className="text-sm font-nunito-regular text-beam-charcoal-500 mb-3">
+                  This is where your commissions will be automatically paid. If you don't have a Beam wallet yet, you can create one after registration from your dashboard.
                 </p>
+                <input
+                  id="beamWalletNumber"
+                  name="beamWalletNumber"
+                  type="text"
+                  
+                  value={formData.beamWalletNumber}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
+                  placeholder="Enter your Beam Wallet number (Optional)"
+                />
               </div>
-            </div>
 
-            {/* Password Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
+              {/* Password Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="password" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                    Password
+                  </label>
                   <input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     autoComplete="new-password"
-                    required
+                    
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
                     placeholder="Create a password"
                   />
-                  <button
-                    type="button"
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </button>
                 </div>
-              </div>
 
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirm password
-                </label>
-                <div className="relative">
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-nunito-semibold text-beam-charcoal-700 mb-2">
+                    Confirm password
+                  </label>
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type="password"
                     autoComplete="new-password"
-                    required
+                    
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-beam-grey-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:border-transparent transition-all duration-200 font-nunito-regular text-beam-charcoal-900 placeholder-beam-grey-400"
                     placeholder="Confirm your password"
                   />
-                  <button
-                    type="button"
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </button>
                 </div>
               </div>
+
+              {/* Terms Checkbox */}
+              <div className="flex items-start">
+                <input
+                  id="agree-terms"
+                  name="agree-terms"
+                  type="checkbox"
+                  
+                  className="mt-1 h-4 w-4 text-beam-pink-600 focus:ring-beam-pink-500 border-beam-grey-300 rounded"
+                />
+                <label htmlFor="agree-terms" className="ml-3 text-sm font-nunito-regular text-beam-charcoal-700 leading-relaxed tracking-beam-normal">
+                  I agree to the{' '}
+                  <button type="button" className="text-beam-pink-600 hover:text-beam-pink-500 font-nunito-semibold">
+                    Terms of Service
+                  </button>{' '}
+                  and{' '}
+                  <button type="button" className="text-beam-pink-600 hover:text-beam-pink-500 font-nunito-semibold">
+                    Privacy Policy
+                  </button>
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading || success}
+                className="w-full bg-gradient-beam text-white font-nunito-bold py-3 px-4 rounded-lg hover:bg-gradient-beam-reverse focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-beam hover:shadow-beam-lg text-base sm:text-lg"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Creating account...
+                  </div>
+                ) : success ? (
+                  <div className="flex items-center justify-center">
+                    <span className="mr-2">✅</span>
+                    Account created successfully!
+                  </div>
+                ) : (
+                  'Create account'
+                )}
+              </button>
+            </form>
+
+            {/* Login Link - No extra gap */}
+            <div className="mt-4 pt-4 border-t border-beam-grey-200">
+              <p className="text-center text-sm font-nunito-regular text-beam-charcoal-600 mb-3">
+                Already have an account?
+              </p>
+              <Link
+                to="/login"
+                className="block w-full text-center px-4 py-2 border border-beam-grey-300 rounded-lg text-sm font-nunito-semibold text-beam-charcoal-700 bg-white hover:bg-beam-grey-50 focus:outline-none focus:ring-2 focus:ring-beam-pink-500 focus:ring-offset-2 transition-all duration-200"
+              >
+                Sign in to your account
+              </Link>
             </div>
-
-            {/* Terms Checkbox */}
-            <div className="flex items-start">
-              <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
-                required
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="agree-terms" className="ml-3 text-sm text-gray-700 leading-relaxed">
-                I agree to the{' '}
-                <button type="button" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Terms of Service
-                </button>{' '}
-                and{' '}
-                <button type="button" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Privacy Policy
-                </button>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Creating account...
-                </div>
-              ) : (
-                'Create account'
-              )}
-            </button>
-          </form>
-
-          {/* Login Link - No extra gap */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600 mb-3">
-              Already have an account?
-            </p>
-            <Link
-              to="/login"
-              className="block w-full text-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-            >
-              Sign in to your account
-            </Link>
           </div>
         </div>
       </div>

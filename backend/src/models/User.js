@@ -2,28 +2,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  beamNumber: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  resellerId: {
-    type: String,
-    required: true,
-    unique: true
-  },
   firstName: {
     type: String,
     required: true,
@@ -34,9 +12,33 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
   phone: {
     type: String,
     trim: true
+  },
+  resellerId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  isReseller: {
+    type: Boolean,
+    default: false
   },
   level: {
     type: String,
@@ -59,6 +61,19 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  socialMedia: {
+    type: String,
+    enum: ['instagram', 'facebook', 'tiktok', 'youtube', 'linkedin', 'whatsapp', 'other', ''],
+    default: ''
+  },
+  experience: {
+    type: String,
+    enum: ['beginner', 'intermediate', 'advanced'],
+    default: 'beginner'
+  },
+  goals: [{
+    type: String
+  }],
   isActive: {
     type: Boolean,
     default: true
@@ -66,29 +81,41 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date
   },
-  registrationDate: {
-    type: Date,
-    default: Date.now
-  },
-  profileCompleted: {
+  emailVerified: {
     type: Boolean,
     default: false
   },
-  resetPasswordToken: {
+  verificationToken: String,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  twoFactorSecret: String,
+  beamWalletId: {
     type: String,
-    default: null
+    sparse: true
   },
-  resetPasswordExpires: {
-    type: Date,
-    default: null
-  },
-  isAdmin: {
+  walletCreated: {
     type: Boolean,
     default: false
   },
-  achievements: [{
-    type: String
-  }]
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  preferences: {
+    notifications: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false }
+    },
+    language: { type: String, default: 'en' },
+    timezone: { type: String, default: 'UTC' }
+  },
+  security: {
+    lastPasswordChange: { type: Date, default: Date.now },
+    failedLoginAttempts: { type: Number, default: 0 },
+    accountLocked: { type: Boolean, default: false },
+    lockExpires: Date
+  }
 }, {
   timestamps: true
 });
@@ -111,11 +138,47 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate reseller ID
-userSchema.methods.generateResellerId = function() {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 5);
-  return `${this.firstName.toLowerCase()}${timestamp}${random}`;
+// Generate reseller ID if not exists
+userSchema.pre('save', async function(next) {
+  if (this.isReseller && !this.resellerId) {
+    const crypto = require('crypto');
+    let resellerId;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      resellerId = crypto.randomBytes(3).toString('hex').toUpperCase();
+      const existingUser = await this.constructor.findOne({ resellerId });
+      if (!existingUser) {
+        isUnique = true;
+      }
+    }
+    
+    this.resellerId = resellerId;
+  }
+  next();
+});
+
+// Update level based on sales
+userSchema.methods.updateLevel = function() {
+  if (this.totalSales >= 50) {
+    this.level = 'Ambassador';
+  } else if (this.totalSales >= 10) {
+    this.level = 'Active';
+  } else {
+    this.level = 'Beginner';
+  }
+};
+
+// Get full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Exclude password from JSON
+userSchema.methods.toJSON = function() {
+  const user = this.toObject();
+  delete user.password;
+  return user;
 };
 
 module.exports = mongoose.model('User', userSchema); 

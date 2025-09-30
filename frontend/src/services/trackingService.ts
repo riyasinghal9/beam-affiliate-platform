@@ -23,6 +23,12 @@ export interface SaleData {
   clickId: string;
   paymentMethod: string;
   timestamp: Date;
+  // Additional fields for backend compatibility
+  productName?: string;
+  commissionRate?: number;
+  paymentId?: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 export interface TrackingStats {
