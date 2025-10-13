@@ -46,31 +46,16 @@ const Products: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      console.log('🔍 Fetching products from backend...');
-      // Use direct backend URL since proxy is not working
-      const response = await api.fetch('/api/products');
-      console.log('🔍 Response status:', response.status);
-      console.log('🔍 Response headers:', response.headers);
+      console.log('🔍 Loading products...');
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔍 Response not OK:', errorText);
-        throw new Error(`Failed to fetch products: ${response.status} ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('🔍 Products data received:', data);
-      setProducts(data);
-    } catch (err: any) {
-      console.error('❌ Error fetching products:', err);
-      setError(`Failed to load products: ${err.message || 'Unknown error'}`);
-      // Fallback to default products if API fails
-      console.log('🔍 Using fallback products...');
+      // For frontend-only deployment, use mock products
+      console.log('🔍 Using mock products for frontend-only deployment...');
       setProducts([
         {
-          _id: 'fallback-1',
+          _id: 'beam-wallet-nfc',
           name: 'Beam Wallet NFC for Merchants',
           description: 'Professional NFC-enabled Beam Wallet solution for physical stores and merchants.',
+          longDescription: 'Transform your business with Beam Wallet NFC technology. Accept contactless payments instantly with our secure, easy-to-use NFC solution designed for modern merchants.',
           price: 199.99,
           commission: 50,
           category: 'Wallet',
@@ -78,13 +63,70 @@ const Products: React.FC = () => {
           imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
           externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
           externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
-          features: ['NFC contactless payment technology', 'Advanced security encryption'],
-          requirements: ['Android or iOS device', 'Internet connection'],
-          tags: ['NFC', 'contactless', 'payments'],
+          features: ['NFC contactless payment technology', 'Advanced security encryption', 'Real-time transaction processing', 'Multi-currency support'],
+          requirements: ['Android or iOS device', 'Internet connection', 'NFC-enabled smartphone'],
+          tags: ['NFC', 'contactless', 'payments', 'merchant'],
           isActive: true,
-          beamWalletProductId: 'fallback-nfc'
+          beamWalletProductId: 'beam-wallet-nfc'
+        },
+        {
+          _id: 'beam-wallet-pos',
+          name: 'Beam Wallet POS System',
+          description: 'Complete point-of-sale solution with Beam Wallet integration for retail businesses.',
+          longDescription: 'Upgrade your retail operations with our comprehensive POS system. Seamlessly integrated with Beam Wallet for secure, fast transactions.',
+          price: 499.99,
+          commission: 100,
+          category: 'POS',
+          productType: 'hardware',
+          imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-pos',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-pos',
+          features: ['Touch screen interface', 'Receipt printing', 'Inventory management', 'Sales analytics'],
+          requirements: ['Power outlet', 'Internet connection', 'Counter space'],
+          tags: ['POS', 'retail', 'hardware', 'business'],
+          isActive: true,
+          beamWalletProductId: 'beam-wallet-pos'
+        },
+        {
+          _id: 'beam-wallet-api',
+          name: 'Beam Wallet API Integration',
+          description: 'Developer-friendly API for integrating Beam Wallet payments into your applications.',
+          longDescription: 'Build powerful payment solutions with our comprehensive API. Easy integration, extensive documentation, and 24/7 developer support.',
+          price: 99.99,
+          commission: 25,
+          category: 'API',
+          productType: 'service',
+          imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-api',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-api',
+          features: ['RESTful API', 'Webhook support', 'SDK libraries', 'Sandbox environment'],
+          requirements: ['Development environment', 'API key', 'HTTPS endpoint'],
+          tags: ['API', 'development', 'integration', 'payments'],
+          isActive: true,
+          beamWalletProductId: 'beam-wallet-api'
+        },
+        {
+          _id: 'beam-wallet-mobile',
+          name: 'Beam Wallet Mobile App',
+          description: 'Complete mobile wallet solution for consumers with advanced security features.',
+          longDescription: 'The ultimate mobile wallet experience. Send, receive, and manage your digital currency with enterprise-grade security and user-friendly interface.',
+          price: 29.99,
+          commission: 15,
+          category: 'Mobile',
+          productType: 'app',
+          imageUrl: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=300&fit=crop',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-mobile',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-mobile',
+          features: ['Biometric authentication', 'Multi-wallet support', 'Transaction history', 'QR code payments'],
+          requirements: ['iOS 12+ or Android 8+', 'Internet connection', 'Camera for QR scanning'],
+          tags: ['mobile', 'wallet', 'consumer', 'app'],
+          isActive: true,
+          beamWalletProductId: 'beam-wallet-mobile'
         }
       ]);
+    } catch (err: any) {
+      console.error('❌ Error loading products:', err);
+      setError(`Failed to load products: ${err.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
