@@ -1,7 +1,7 @@
 [build]
-  base = "frontend/"
-  publish = "frontend/build"
-  command = "npm run build"
+  base = "frontend-deployment-20251013_182159/"
+  publish = "frontend-deployment-20251013_182159/"
+  command = "echo 'Using pre-built frontend package'"
 
 [build.environment]
   REACT_APP_API_URL = "https://beam-affiliate-backend.herokuapp.com"
