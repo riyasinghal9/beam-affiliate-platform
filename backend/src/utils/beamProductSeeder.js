@@ -3,7 +3,40 @@ const Product = require('../models/Product');
 
 const beamWalletProducts = [
   {
-    name: 'Beam Wallet NFC for Merchants',
+    name: 'Certificate of Quality and Trust',
+    description: 'Official quality and trust certification for merchants using Beam Wallet. Enhance customer confidence and credibility.',
+    longDescription: 'Professional certification program that validates merchant quality and trustworthiness. This certificate enhances customer confidence and provides official recognition of compliance with Beam Wallet standards.',
+    price: 25.00,
+    commission: 5.00, // 20% commission rate
+    category: 'Certification',
+    productType: 'certificate',
+    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=600&fit=crop&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop&q=80',
+    externalUrl: 'https://shop.beamwallet.com/pt/product/certificate-of-quality-and-trust',
+    externalShopUrl: 'https://shop.beamwallet.com/pt/product/certificate-of-quality-and-trust',
+    beamWalletProductId: 'certificate-of-quality-and-trust',
+    features: [
+      'Official Beam Wallet certification',
+      'Trust badge for website/store',
+      'Enhanced customer confidence',
+      'Quality assurance verification',
+      'Marketing materials included',
+      'Certificate validity tracking',
+      'Renewal reminders',
+      'Priority customer support'
+    ],
+    requirements: [
+      'Active Beam Wallet merchant account',
+      'Compliance with quality standards',
+      'Business verification',
+      'Customer service standards'
+    ],
+    tags: ['certificate', 'trust', 'quality', 'verification', 'credibility'],
+    sortOrder: 1
+  },
+  {
+    name: 'Beam Wallet NFC',
     description: 'Professional NFC-enabled Beam Wallet solution for physical stores and merchants. Enable contactless payments with advanced security features.',
     longDescription: 'The Beam Wallet NFC solution provides merchants with cutting-edge contactless payment technology. This comprehensive system includes NFC hardware, software integration, and complete setup support for physical stores.',
     price: 75.00,
@@ -13,8 +46,8 @@ const beamWalletProducts = [
     isActive: true,
     imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop&q=80',
     thumbnailUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop&q=80',
-    externalUrl: 'https://shop.beamwallet.com/en/product/beam-wallet-nfc',
-    externalShopUrl: 'https://shop.beamwallet.com/en/product/beam-wallet-nfc',
+    externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
+    externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
     beamWalletProductId: 'beam-wallet-nfc',
     features: [
       'NFC contactless payment technology',
@@ -33,43 +66,10 @@ const beamWalletProducts = [
       'Bank account for settlements'
     ],
     tags: ['NFC', 'contactless', 'payments', 'merchants', 'physical-stores'],
-    sortOrder: 1
-  },
-  {
-    name: 'Beam Wallet Bluetooth Terminal for Merchants',
-    description: 'Bluetooth-enabled payment terminal for physical stores. Complete wireless payment solution with advanced connectivity.',
-    longDescription: 'Professional Bluetooth terminal designed specifically for physical stores. This wireless payment solution offers seamless connectivity, robust security, and comprehensive merchant tools.',
-    price: 175.00,
-    commission: 35.00, // 20% commission rate
-    category: 'Hardware',
-    productType: 'hardware',
-    isActive: true,
-    imageUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=900&fit=crop&q=90&auto=format&fm=webp',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&h=450&fit=crop&q=90&auto=format&fm=webp',
-    externalUrl: 'https://shop.beamwallet.com/en/product/bluetooth-terminal-for-physical-stores',
-    externalShopUrl: 'https://shop.beamwallet.com/en/product/bluetooth-terminal-for-physical-stores',
-    beamWalletProductId: 'bluetooth-terminal-physical-stores',
-    features: [
-      'Wireless Bluetooth connectivity',
-      'Portable payment terminal',
-      'Long-lasting battery life',
-      'Secure payment processing',
-      'Real-time sales reporting',
-      'Inventory management tools',
-      'Customer receipt system',
-      'Multi-device compatibility'
-    ],
-    requirements: [
-      'Bluetooth-enabled device',
-      'Stable internet connection',
-      'Business license',
-      'Merchant account setup'
-    ],
-    tags: ['bluetooth', 'terminal', 'wireless', 'physical-stores', 'portable'],
     sortOrder: 2
   },
   {
-    name: 'Beam Wallet for Online Stores',
+    name: 'For Online Stores',
     description: 'Complete e-commerce payment solution for online stores. Integrate Beam Wallet payments into your website with ease.',
     longDescription: 'Comprehensive e-commerce integration solution that enables online stores to accept Beam Wallet payments. Includes API integration, checkout widgets, and complete payment processing infrastructure.',
     price: 75.00,
@@ -79,9 +79,9 @@ const beamWalletProducts = [
     isActive: true,
     imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=900&fit=crop&q=90&auto=format&fm=webp',
     thumbnailUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=450&fit=crop&q=90&auto=format&fm=webp',
-    externalUrl: 'https://shop.beamwallet.com/en/product/for-online-stores',
-    externalShopUrl: 'https://shop.beamwallet.com/en/product/for-online-stores',
-    beamWalletProductId: 'online-stores-integration',
+    externalUrl: 'https://shop.beamwallet.com/pt/product/for-online-stores',
+    externalShopUrl: 'https://shop.beamwallet.com/pt/product/for-online-stores',
+    beamWalletProductId: 'for-online-stores',
     features: [
       'Easy API integration',
       'Customizable checkout widgets',
@@ -102,36 +102,36 @@ const beamWalletProducts = [
     sortOrder: 3
   },
   {
-    name: 'Certificate of Quality and Trust for Merchants',
-    description: 'Official quality and trust certification for merchants using Beam Wallet. Enhance customer confidence and credibility.',
-    longDescription: 'Professional certification program that validates merchant quality and trustworthiness. This certificate enhances customer confidence and provides official recognition of compliance with Beam Wallet standards.',
-    price: 25.00,
-    commission: 5.00, // 20% commission rate
-    category: 'Certification',
-    productType: 'certificate',
+    name: 'Cashback Card',
+    description: 'Exclusive Beam Wallet cashback card for customers. Earn rewards on every purchase with our premium cashback program.',
+    longDescription: 'Premium cashback card that provides customers with exclusive rewards and benefits. Earn cashback on every purchase while enjoying premium features and exclusive merchant discounts.',
+    price: 50.00,
+    commission: 10.00, // 20% commission rate
+    category: 'Card',
+    productType: 'card',
     isActive: true,
-    imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=600&fit=crop&q=80',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop&q=80',
-    externalUrl: 'https://shop.beamwallet.com/en/product/certificate-of-quality-and-trust',
-    externalShopUrl: 'https://shop.beamwallet.com/en/product/certificate-of-quality-and-trust',
-    beamWalletProductId: 'quality-trust-certificate',
+    imageUrl: 'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=800&h=600&fit=crop&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=400&h=300&fit=crop&q=80',
+    externalUrl: 'https://shop.beamwallet.com/pt/product/cashback-card',
+    externalShopUrl: 'https://shop.beamwallet.com/pt/product/cashback-card',
+    beamWalletProductId: 'cashback-card',
     features: [
-      'Official Beam Wallet certification',
-      'Trust badge for website/store',
-      'Enhanced customer confidence',
-      'Quality assurance verification',
-      'Marketing materials included',
-      'Certificate validity tracking',
-      'Renewal reminders',
-      'Priority customer support'
+      'Exclusive cashback rewards',
+      'Premium card design',
+      'Worldwide acceptance',
+      'Mobile app integration',
+      'Transaction notifications',
+      'Spending analytics',
+      'Fraud protection',
+      '24/7 customer support'
     ],
     requirements: [
-      'Active Beam Wallet merchant account',
-      'Compliance with quality standards',
-      'Business verification',
-      'Customer service standards'
+      'Valid identification',
+      'Credit check approval',
+      'Minimum age requirement',
+      'Residential address verification'
     ],
-    tags: ['certificate', 'trust', 'quality', 'verification', 'credibility'],
+    tags: ['cashback', 'card', 'rewards', 'premium', 'customer'],
     sortOrder: 4
   }
 ];

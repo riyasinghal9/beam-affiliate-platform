@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://beam-affiliate-backend.herokuapp.com/api/$1"
+      "dest": "https://beam-affiliate-backend.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
@@ -17,7 +17,7 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://beam-affiliate-backend.herokuapp.com",
+    "REACT_APP_API_URL": "https://beam-affiliate-backend.onrender.com",
     "REACT_APP_ENVIRONMENT": "production",
     "REACT_APP_STRIPE_PUBLIC_KEY": "pk_test_51234567890abcdefghijklmnopqrstuvwxyz1234567890"
   }

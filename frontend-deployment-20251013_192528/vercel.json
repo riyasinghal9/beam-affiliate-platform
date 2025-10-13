@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://beam-affiliate-backend.herokuapp.com/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://beam-affiliate-backend.herokuapp.com",
+    "REACT_APP_ENVIRONMENT": "production",
+    "REACT_APP_STRIPE_PUBLIC_KEY": "pk_test_51234567890abcdefghijklmnopqrstuvwxyz1234567890"
+  }
+}

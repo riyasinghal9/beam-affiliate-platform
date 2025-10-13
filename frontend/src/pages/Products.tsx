@@ -52,76 +52,76 @@ const Products: React.FC = () => {
       console.log('🔍 Using mock products for frontend-only deployment...');
       setProducts([
         {
+          _id: 'certificate-of-quality-and-trust',
+          name: 'Certificate of Quality and Trust',
+          description: 'Official quality and trust certification for merchants using Beam Wallet. Enhance customer confidence and credibility.',
+          longDescription: 'Professional certification program that validates merchant quality and trustworthiness. This certificate enhances customer confidence and provides official recognition of compliance with Beam Wallet standards.',
+          price: 25.00,
+          commission: 5,
+          category: 'Certification',
+          productType: 'certificate',
+          imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=600&fit=crop&q=80',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/certificate-of-quality-and-trust',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/certificate-of-quality-and-trust',
+          features: ['Official Beam Wallet certification', 'Trust badge for website/store', 'Enhanced customer confidence', 'Quality assurance verification'],
+          requirements: ['Active Beam Wallet merchant account', 'Compliance with quality standards', 'Business verification'],
+          tags: ['certificate', 'trust', 'quality', 'verification'],
+          isActive: true,
+          beamWalletProductId: 'certificate-of-quality-and-trust'
+        },
+        {
           _id: 'beam-wallet-nfc',
-          name: 'Beam Wallet NFC for Merchants',
-          description: 'Professional NFC-enabled Beam Wallet solution for physical stores and merchants.',
-          longDescription: 'Transform your business with Beam Wallet NFC technology. Accept contactless payments instantly with our secure, easy-to-use NFC solution designed for modern merchants.',
-          price: 99.99,
-          commission: 25,
-          category: 'Wallet',
-          productType: 'service',
-          imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
+          name: 'Beam Wallet NFC',
+          description: 'Professional NFC-enabled Beam Wallet solution for physical stores and merchants. Enable contactless payments with advanced security features.',
+          longDescription: 'The Beam Wallet NFC solution provides merchants with cutting-edge contactless payment technology. This comprehensive system includes NFC hardware, software integration, and complete setup support for physical stores.',
+          price: 75.00,
+          commission: 15,
+          category: 'Hardware',
+          productType: 'hardware',
+          imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop&q=80',
           externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
           externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-nfc',
-          features: ['NFC contactless payment technology', 'Advanced security encryption', 'Real-time transaction processing', 'Multi-currency support'],
-          requirements: ['Android or iOS device', 'Internet connection', 'NFC-enabled smartphone'],
-          tags: ['NFC', 'contactless', 'payments', 'merchant'],
+          features: ['NFC contactless payment technology', 'Advanced security encryption', 'Complete hardware setup', 'Merchant dashboard access'],
+          requirements: ['Android or iOS device', 'Internet connection', 'Valid business registration'],
+          tags: ['NFC', 'contactless', 'payments', 'merchants'],
           isActive: true,
           beamWalletProductId: 'beam-wallet-nfc'
         },
         {
-          _id: 'beam-wallet-pos',
-          name: 'Beam Wallet POS System',
-          description: 'Complete point-of-sale solution with Beam Wallet integration for retail businesses.',
-          longDescription: 'Upgrade your retail operations with our comprehensive POS system. Seamlessly integrated with Beam Wallet for secure, fast transactions.',
-          price: 299.99,
-          commission: 75,
-          category: 'POS',
-          productType: 'hardware',
-          imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
-          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-pos',
-          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-pos',
-          features: ['Touch screen interface', 'Receipt printing', 'Inventory management', 'Sales analytics'],
-          requirements: ['Power outlet', 'Internet connection', 'Counter space'],
-          tags: ['POS', 'retail', 'hardware', 'business'],
+          _id: 'for-online-stores',
+          name: 'For Online Stores',
+          description: 'Complete e-commerce payment solution for online stores. Integrate Beam Wallet payments into your website with ease.',
+          longDescription: 'Comprehensive e-commerce integration solution that enables online stores to accept Beam Wallet payments. Includes API integration, checkout widgets, and complete payment processing infrastructure.',
+          price: 75.00,
+          commission: 15,
+          category: 'Software',
+          productType: 'software',
+          imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=900&fit=crop&q=90&auto=format&fm=webp',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/for-online-stores',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/for-online-stores',
+          features: ['Easy API integration', 'Customizable checkout widgets', 'Secure payment processing', 'Multi-platform support'],
+          requirements: ['Active website or e-commerce platform', 'Basic technical knowledge', 'SSL certificate'],
+          tags: ['e-commerce', 'online-stores', 'API', 'integration'],
           isActive: true,
-          beamWalletProductId: 'beam-wallet-pos'
+          beamWalletProductId: 'for-online-stores'
         },
         {
-          _id: 'beam-wallet-api',
-          name: 'Beam Wallet API Integration',
-          description: 'Developer-friendly API for integrating Beam Wallet payments into your applications.',
-          longDescription: 'Build powerful payment solutions with our comprehensive API. Easy integration, extensive documentation, and 24/7 developer support.',
-          price: 49.99,
-          commission: 12,
-          category: 'API',
-          productType: 'service',
-          imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop',
-          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-api',
-          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-api',
-          features: ['RESTful API', 'Webhook support', 'SDK libraries', 'Sandbox environment'],
-          requirements: ['Development environment', 'API key', 'HTTPS endpoint'],
-          tags: ['API', 'development', 'integration', 'payments'],
+          _id: 'cashback-card',
+          name: 'Cashback Card',
+          description: 'Exclusive Beam Wallet cashback card for customers. Earn rewards on every purchase with our premium cashback program.',
+          longDescription: 'Premium cashback card that provides customers with exclusive rewards and benefits. Earn cashback on every purchase while enjoying premium features and exclusive merchant discounts.',
+          price: 50.00,
+          commission: 10,
+          category: 'Card',
+          productType: 'card',
+          imageUrl: 'https://images.unsplash.com/photo-1556742111-a301076d9d18?w=800&h=600&fit=crop&q=80',
+          externalUrl: 'https://shop.beamwallet.com/pt/product/cashback-card',
+          externalShopUrl: 'https://shop.beamwallet.com/pt/product/cashback-card',
+          features: ['Exclusive cashback rewards', 'Premium card design', 'Worldwide acceptance', 'Mobile app integration'],
+          requirements: ['Valid identification', 'Credit check approval', 'Minimum age requirement'],
+          tags: ['cashback', 'card', 'rewards', 'premium'],
           isActive: true,
-          beamWalletProductId: 'beam-wallet-api'
-        },
-        {
-          _id: 'beam-wallet-mobile',
-          name: 'Beam Wallet Mobile App',
-          description: 'Complete mobile wallet solution for consumers with advanced security features.',
-          longDescription: 'The ultimate mobile wallet experience. Send, receive, and manage your digital currency with enterprise-grade security and user-friendly interface.',
-          price: 19.99,
-          commission: 5,
-          category: 'Mobile',
-          productType: 'app',
-          imageUrl: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=300&fit=crop',
-          externalUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-mobile',
-          externalShopUrl: 'https://shop.beamwallet.com/pt/product/beam-wallet-mobile',
-          features: ['Biometric authentication', 'Multi-wallet support', 'Transaction history', 'QR code payments'],
-          requirements: ['iOS 12+ or Android 8+', 'Internet connection', 'Camera for QR scanning'],
-          tags: ['mobile', 'wallet', 'consumer', 'app'],
-          isActive: true,
-          beamWalletProductId: 'beam-wallet-mobile'
+          beamWalletProductId: 'cashback-card'
         }
       ]);
     } catch (err: any) {
@@ -144,6 +144,10 @@ const Products: React.FC = () => {
 
   const getProductIcon = (category: string, productType: string) => {
     switch (category) {
+      case 'Hardware': return WrenchScrewdriverIcon;
+      case 'Software': return CogIcon;
+      case 'Certification': return DocumentTextIcon;
+      case 'Card': return ShoppingBagIcon;
       case 'Wallet': return ShoppingBagIcon;
       case 'Installation': return WrenchScrewdriverIcon;
       case 'License': return DocumentTextIcon;
@@ -154,6 +158,10 @@ const Products: React.FC = () => {
 
   const getProductGradient = (category: string) => {
     switch (category) {
+      case 'Hardware': return 'from-green-500 to-green-600';
+      case 'Software': return 'from-blue-500 to-blue-600';
+      case 'Certification': return 'from-purple-500 to-purple-600';
+      case 'Card': return 'from-orange-500 to-orange-600';
       case 'Wallet': return 'from-blue-500 to-blue-600';
       case 'Installation': return 'from-green-500 to-green-600';
       case 'License': return 'from-purple-500 to-purple-600';
@@ -164,6 +172,10 @@ const Products: React.FC = () => {
 
   const getProductBgGradient = (category: string) => {
     switch (category) {
+      case 'Hardware': return 'from-green-50 to-emerald-50';
+      case 'Software': return 'from-blue-50 to-indigo-50';
+      case 'Certification': return 'from-purple-50 to-pink-50';
+      case 'Card': return 'from-orange-50 to-amber-50';
       case 'Wallet': return 'from-blue-50 to-indigo-50';
       case 'Installation': return 'from-green-50 to-emerald-50';
       case 'License': return 'from-purple-50 to-pink-50';

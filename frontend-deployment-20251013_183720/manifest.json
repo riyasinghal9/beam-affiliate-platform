@@ -1,0 +1,120 @@
+{
+  "short_name": "Beam Affiliate",
+  "name": "Beam Affiliate Platform",
+  "description": "Start earning money online with Beam Wallet affiliate program. No investment required, just share links and earn commissions.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["business", "finance", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard - Track your earnings and performance"
+    },
+    {
+      "src": "screenshots/products.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Products - Browse available products to promote"
+    },
+    {
+      "src": "screenshots/analytics.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Analytics - Detailed performance insights"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your earnings and performance",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "icons/dashboard.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "short_name": "Products",
+      "description": "Browse products to promote",
+      "url": "/products",
+      "icons": [
+        {
+          "src": "icons/products.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "short_name": "Analytics",
+      "description": "View detailed analytics",
+      "url": "/analytics",
+      "icons": [
+        {
+          "src": "icons/analytics.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Training",
+      "short_name": "Training",
+      "description": "Access training materials",
+      "url": "/training",
+      "icons": [
+        {
+          "src": "icons/training.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "web+beam",
+      "url": "/pay?ref=%s"
+    }
+  ]
+}
