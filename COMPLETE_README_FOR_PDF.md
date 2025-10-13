@@ -138,7 +138,7 @@ JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
 ENCRYPTION_KEY=your-32-character-encryption-key
 
 # Payment Processing
-STRIPE_SECRET_KEY=your_stripe_secret_key_hereyour_stripe_secret_key
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_keyyour_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
 # Email Configuration
@@ -173,7 +173,7 @@ npm install
 Create a `.env` file in the frontend directory:
 ```env
 REACT_APP_API_URL=http://localhost:5001
-REACT_APP_STRIPE_PUBLIC_KEY=your_stripe_publishable_key_hereyour_stripe_public_key
+REACT_APP_STRIPE_PUBLIC_KEY=pk_test_your_stripe_publishable_keyyour_stripe_public_key
 REACT_APP_BEAM_WALLET_URL=https://beamwallet.com
 ```
 

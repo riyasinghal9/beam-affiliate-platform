@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: beam-affiliate-frontend
+    env: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://beam-affiliate-backend.onrender.com
+      - key: REACT_APP_ENVIRONMENT
+        value: production
+      - key: REACT_APP_STRIPE_PUBLIC_KEY
+        value: pk_test_51234567890abcdefghijklmnopqrstuvwxyz1234567890
