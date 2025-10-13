@@ -39,7 +39,7 @@ const Transactions: React.FC = () => {
   const fetchTransactions = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5001/api/dashboard/transactions?page=${page}&limit=10`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/dashboard/transactions?page=${page}&limit=10`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

@@ -122,10 +122,10 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       
       const [statsRes, recentSalesRes] = await Promise.all([
-        fetch('http://localhost:5001/api/reseller/stats', {
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/reseller/stats`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch('http://localhost:5001/api/reseller/recent-sales', {
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/reseller/recent-sales`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);

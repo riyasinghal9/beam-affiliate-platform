@@ -77,13 +77,13 @@ const ResellerDashboard: React.FC = () => {
     try {
       setLoading(true);
       const [statsRes, productsRes, salesRes] = await Promise.all([
-        fetch('http://localhost:5001/api/reseller/stats', {
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/reseller/stats`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch('http://localhost:5001/api/reseller/products', {
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/reseller/products`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch('http://localhost:5001/api/dashboard/transactions', {
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/dashboard/transactions`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);

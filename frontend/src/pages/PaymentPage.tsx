@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import trackingService from '../services/trackingService';
+import { api } from '../utils/api';
 import {
   ExclamationTriangleIcon,
   ArrowLeftIcon,
@@ -75,7 +76,7 @@ const PaymentPageContent: React.FC = () => {
         try {
           console.log('PaymentPage: Fetching products...');
           // Fetch products from the backend API
-          const response = await fetch('http://localhost:5001/api/products');
+          const response = await api.fetch('/api/products');
           
           if (response.ok) {
             const products = await response.json();

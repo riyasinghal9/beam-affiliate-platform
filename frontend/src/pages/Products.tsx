@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 import { 
   CheckCircleIcon,
   WrenchScrewdriverIcon,
@@ -47,7 +48,7 @@ const Products: React.FC = () => {
     try {
       console.log('🔍 Fetching products from backend...');
       // Use direct backend URL since proxy is not working
-      const response = await fetch('http://localhost:5001/api/products');
+      const response = await api.fetch('/api/products');
       console.log('🔍 Response status:', response.status);
       console.log('🔍 Response headers:', response.headers);
       
