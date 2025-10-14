@@ -131,8 +131,16 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-white pt-16">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-beam-pink-50 to-beam-purple-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+      <div className="relative overflow-hidden" 
+           style={{
+             backgroundImage: 'url(/beam-banner.jpg)',
+             backgroundSize: 'cover',
+             backgroundPosition: 'center',
+             backgroundRepeat: 'no-repeat'
+           }}>
+        {/* Overlay for text readability */}
+        <div className="absolute inset-0 bg-white/40"></div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
           <div className="text-center">
             {/* Logo */}
             <div className="flex justify-center mb-8">
